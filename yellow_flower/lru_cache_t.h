@@ -44,7 +44,7 @@ struct lru_cache_t {
 				auto replacement_it = container.begin();
 				map.erase(*replacement_it);
 				*replacement_it = x;
-				rotate(replacement_it, replacement_it + 1, container.end());
+				std::rotate(replacement_it, replacement_it + 1, container.end());
 			} else {
 				container.push_back(x);
 			}
