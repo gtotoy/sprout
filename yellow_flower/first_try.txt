@@ -1,0 +1,122 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <queue>
+#include <algorithm>
+#include <cstddef>
+#include <chrono>
+#include <functional>
+#include <unordered_map>
+#include <map>
+#include <list>
+#include <deque>
+
+const std::string workload_path = "workload.txt";
+//using entry_t = std::string;
+using entry_t = int;
+using workload_t = std::vector<entry_t>;
+using cache_t = std::vector<entry_t>;
+
+bool my_equal_to(entry_t const& x, entry_t const& y) { return x == y; }
+
+std::istream& get_workload(std::istream& in, std::vector<std::string>& x);
+
+std::istream& get_workload(std::istream& in, std::vector<int>& x);
+
+int main_(int argc, char **argv) {
+	using namespace std;
+	cout << "main.cpp" << endl;
+	workload_t workload{};
+	{
+		ifstream ifworkload{workload_path};
+		if (!ifworkload) {
+			cerr << "file NOT found." << endl;
+			return -1;
+		}
+		cout << "file ok" << endl;
+		workload.reserve(3000000);
+		cout << "loading workload from file..." << endl;
+		get_workload(ifworkload, workload);
+		/*{
+			auto w = workload;
+			sort(w.begin(), w.end());
+			auto unique_last = unique(w.begin(), w.end());
+			cout << "unique elements size in workload: " << distance(w.begin(), unique_last) << endl;
+ 		}*/
+		cout << endl;
+	}
+	//size_t cache_capacity = 50000;
+	//size_t cache_capacity = 600000;
+	cache_t cache{};
+	unordered_map<entry_t, entry_t> cache_map{};
+	for (size_t i = 1; i < 2000000; i *= 2) {
+	//for (size_t i = 600000; i < 700000; i *= 2) {
+		size_t cache_capacity = i;
+		cache.reserve(cache_capacity);
+		cout << "cache capacity: " << cache_capacity << endl
+			 << "cache size: " << cache.size() << endl
+			 << "workload size: " << workload.size() << endl
+			 << endl;
+		size_t cache_misses = 0;
+		std::chrono::time_point<std::chrono::system_clock> start, end;
+		start = std::chrono::system_clock::now();
+		
+		cache_map.reserve(cache_capacity);
+		auto replacement_it = cache.begin();
+		for (auto const& entry : workload) {
+			auto first = cache.begin();
+			auto last = cache.end();
+			auto cache_map_it = cache_map.find(entry);
+			//auto cache_entry_it = find(first, last, entry);
+			//auto cache_entry_it = find_if(first, last, bind(equal_to<entry_t>{}, placeholders::_1, entry));
+			//auto cache_entry_it = find_if(first, last, bind(my_equal_to, placeholders::_1, entry));
+			//auto cache_entry_it = find_if(first, last, [&entry](entry_t const& x){ return x == entry;});
+			//bool entry_is_cached = cache_entry_it != last;
+			bool entry_is_cached = cache_map_it != cache_map.end();
+			if (!entry_is_cached) {
+				++cache_misses;
+				bool cache_is_full = cache.size() == cache_capacity;
+				if (cache_is_full) {
+					/*cache_map.erase(*replacement_it);
+					*replacement_it = entry;
+					{
+						++replacement_it; // assuming iterators are always valid (cache is not going to expand and invalidate iterators)
+						if (replacement_it == last) replacement_it = cache.begin();
+					}
+					*/
+					replacement_it = cache.begin();
+					cache_map.erase(*replacement_it);
+					*replacement_it = entry;
+					rotate(cache.begin(), cache.begin() + 1, cache.end());
+					
+				} else {
+					cache.push_back(entry);
+				}
+				cache_map.insert({entry, entry});
+			}
+		}
+		end = std::chrono::system_clock::now();
+	 
+		std::chrono::duration<double> elapsed_seconds = end-start;
+		std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+		
+		std::cout << "finished computation at " << std::ctime(&end_time)
+				  << "elapsed time: " << elapsed_seconds.count() << "s"
+				  << " == "
+				  << chrono::duration_cast<chrono::minutes>(elapsed_seconds).count() << "m " << (int)elapsed_seconds.count() % 60 << "s" << endl
+				  << endl;
+		cout << "cache misses: " << cache_misses << " entries == " << (cache_misses * 100.0)/workload.size() << "% of workload's size" << endl;
+		size_t warm_cache_misses = (cache_misses > cache.size()) ? cache_misses - cache.size() : 0;
+		cout << "warm cache misses: " << warm_cache_misses << " entries == " << (warm_cache_misses * 100.0)/workload.size() << "% of workload's size" << endl;
+		cout << "cache capacity: " << cache_capacity << endl;
+		cout << "cache size: " << cache.size() << endl;
+		
+		cache.clear();
+		cache_map.clear();
+		cout << "\n\n\n" << endl;
+	}
+	cout << "finished computation" << endl;
+	char c; cin >> c;
+	return 0;
+}
