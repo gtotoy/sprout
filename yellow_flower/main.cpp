@@ -50,7 +50,7 @@ void print_elapsed_time (std::chrono::time_point<std::chrono::system_clock> cons
 			  << std::endl;
 }
 
-using cache_record_t = std::vector<std::tuple<size_t, size_t, size_t, double>>;
+using cache_record_t = std::vector<std::tuple<std::size_t, std::size_t, double, std::size_t, double, double>>;
 
 template<typename T>
 constexpr char* type_name() { return "undefined_type_name"; }
@@ -90,7 +90,8 @@ int main(int argc, char **argv) {
 	
 	fifo_cache_t<entry_t> cache{};
 	cache_record_t cache_record{};
-	for (size_t i = 1; i < 1000000; i += 100) {
+	for (size_t i = 1; i < 640000; i += 20000) {
+	//for (size_t i = 1; i < 635000; i += 5000) {
 	//for (size_t i = 600000; i < 700000; i *= 2) {
 		size_t cache_capacity = i;
 		cache.reserve(cache_capacity);
@@ -104,7 +105,7 @@ int main(int argc, char **argv) {
 		end_time = std::chrono::system_clock::now();
 		
 		std::chrono::duration<double> elapsed_seconds = end_time-begin_time;
-		cache_record.emplace_back(cache.capacity(), cache_misses, warm_cache_misses, elapsed_seconds.count());
+		cache_record.emplace_back(cache.capacity(), cache_misses, (double)cache_misses/workload.size(), warm_cache_misses, (double)warm_cache_misses/workload.size(), elapsed_seconds.count());
 		
 		print_elapsed_time(begin_time, end_time);
 		cout << "cache misses: " << cache_misses << " entries == " << (cache_misses * 100.0)/workload.size() << "% of workload's size" << endl;
@@ -112,6 +113,7 @@ int main(int argc, char **argv) {
 		print_workload_cache(workload, cache);
 		
 		cache.clear();
+		if (i == 1) --i;
 		cout << "\n\n\n" << endl;
 	}
 	
@@ -125,7 +127,9 @@ int main(int argc, char **argv) {
 		}
 		cout << "saving record to file ..." << endl;
 		for (auto const& record : cache_record) {
-			ofrecord << get<0>(record) << ' ' << get<1>(record) << ' ' << get<2>(record) << ' ' << get<3>(record) << '\n';
+			ofrecord << get<0>(record) << ' ' << get<1>(record) << ' ' << get<2>(record)
+					 << ' ' << get<3>(record) << ' ' << get<4>(record) << ' ' << get<5>(record)
+					 << '\n';
 		}
 		cout << "saved" << endl;
 	}
