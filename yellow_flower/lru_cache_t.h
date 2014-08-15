@@ -14,20 +14,23 @@ struct lru_cache_t {
 	using Map = std::unordered_map<T, T>;
 	
 	using iterator = typename Map::iterator;
+	using size_type = std::size_t;
 	
 	Container container;
 	Map map;
 	
 	lru_cache_t()=default;
-	lru_cache_t(std::size_t capacity) : container(capacity), map() {
+	lru_cache_t(size_type capacity) : container(capacity), map() {
 		map.reserve(capacity);
+		capacity_ = capacity;
 	}
 	
-	std::size_t capacity() const { return container.capacity(); }
-	std::size_t size() const { return container.size(); }
-	void reserve(std::size_t new_capacity) {
+	size_type capacity() const { return capacity_; }
+	size_type size() const { return container.size(); }
+	void reserve(size_type new_capacity) {
 		container.reserve(new_capacity);
 		map.reserve(new_capacity);
+		capacity_ = new_capacity;
 	}
 	void clear() {
 		container.clear();
@@ -41,18 +44,25 @@ struct lru_cache_t {
 		if (cache_miss) {
 			bool full = container.size() == capacity();
 			if (full) {
-				auto replacement_it = container.begin();
+				auto replacement_it = container.begin(); // older
 				map.erase(*replacement_it);
-				*replacement_it = x;
-				std::rotate(replacement_it, replacement_it + 1, container.end());
+				container.erase(replacement_it);
+				container.push_back(x);
+				//std::rotate(replacement_it, replacement_it + 1, container.end());
 			} else {
 				container.push_back(x);
 			}
 			map.insert({x, x});
 			return make_tuple(map.find(x), cache_miss);
 		}
+		auto container_entry_it = std::find(container.begin(), container.end(), x);
+		auto entry = *container_entry_it;
+		container.erase(container_entry_it);
+		container.push_back(std::move(entry));
 		return make_tuple(map_entry_it, cache_miss);
 	}
+	
+	size_type capacity_;
 };
 
 

@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
 		cout << endl;
 	}
 	
-	fifo_cache_t<entry_t> cache{};
+	lru_cache_t<entry_t> cache{};
 	cache_record_t cache_record{};
 	for (size_t i = 1; i < 640000; i += 20000) {
 	//for (size_t i = 1; i < 635000; i += 5000) {
