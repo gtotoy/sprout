@@ -1,19 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Session Name="C:\Users\Gustavo\Desktop\sprout\sprout.workspace">
-  <int Value="1" Name="m_selectedTab"/>
+  <int Value="0" Name="m_selectedTab"/>
   <wxString Value="C:\Users\Gustavo\Desktop\sprout\sprout.workspace" Name="m_workspaceName"/>
   <TabInfoArray Name="TabInfoArray">
     <TabInfo>
       <wxString Value="C:\Users\Gustavo\Desktop\sprout\yellow_flower\main.cpp" Name="FileName"/>
-      <int Value="105" Name="FirstVisibleLine"/>
-      <int Value="90" Name="CurrentLine"/>
-      <wxArrayString Name="Bookmarks"/>
-      <IntVector Name="CollapsedFolds"/>
-    </TabInfo>
-    <TabInfo>
-      <wxString Value="C:\Users\Gustavo\Desktop\sprout\yellow_flower\lru_cache_t.h" Name="FileName"/>
-      <int Value="36" Name="FirstVisibleLine"/>
-      <int Value="60" Name="CurrentLine"/>
+      <int Value="137" Name="FirstVisibleLine"/>
+      <int Value="149" Name="CurrentLine"/>
       <wxArrayString Name="Bookmarks"/>
       <IntVector Name="CollapsedFolds"/>
     </TabInfo>

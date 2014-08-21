@@ -64,35 +64,11 @@ constexpr char* type_name<lru_cache_t<entry_t>>() { return "lru_cache_t"; }
 template<>
 constexpr char* type_name<lfu_cache_t<entry_t>>() { return "lfu_cache_t"; }
 
-
-int main(int argc, char **argv) {
+template<typename Cache>
+cache_record_t run_simulation(Cache& cache, workload_t<entry_t> const& workload, std::size_t begin_capacity, std::size_t end_capacity, std::size_t delta_capacity) {
 	using namespace std;
-	workload_t<entry_t> workload{};
-	{
-		ifstream ifworkload{workload_path};
-		if (!ifworkload) {
-			cerr << "file NOT found" << endl;
-			return -1;
-		}
-		cout << "file ok" << endl;
-		workload.reserve(3000000);
-		cout << "loading workload from file ..." << endl;
-		get_workload(ifworkload, workload);
-		cout << "loaded" << endl;
-		/*{
-			auto w = workload;
-			sort(w.begin(), w.end());
-			auto unique_last = unique(w.begin(), w.end());
-			cout << "unique elements size in workload: " << distance(w.begin(), unique_last) << endl;
- 		}*/
-		cout << endl;
-	}
-	
-	lru_cache_t<entry_t> cache{};
 	cache_record_t cache_record{};
-	for (size_t i = 1; i < 640000; i += 20000) {
-	//for (size_t i = 1; i < 635000; i += 5000) {
-	//for (size_t i = 600000; i < 700000; i *= 2) {
+	for (size_t i = begin_capacity; i < end_capacity; i += delta_capacity) {
 		size_t cache_capacity = i;
 		cache.reserve(cache_capacity);
 		
@@ -118,21 +94,74 @@ int main(int argc, char **argv) {
 	}
 	
 	cout << "finished computation" << endl;
-	
+	return cache_record;
+}
+
+template<typename Cache>
+void save_record(Cache const& cache, cache_record_t const& cache_record) {
+	using namespace std;
+	ofstream ofrecord{type_name<Cache>()};
+	if (!ofrecord) {
+		cerr << "coud NOT save file" << endl;
+		return;
+	}
+	cout << "saving record to file ..." << endl;
+	for (auto const& record : cache_record) {
+		ofrecord << get<0>(record) << ' ' << get<1>(record) << ' ' << get<2>(record)
+				 << ' ' << get<3>(record) << ' ' << get<4>(record) << ' ' << get<5>(record)
+				 << '\n';
+	}
+	cout << "saved" << endl;
+}
+
+
+
+int main(int argc, char **argv) {
+	using namespace std;
+	workload_t<entry_t> workload{};
 	{
-		ofstream ofrecord{type_name<decltype(cache)>()};
-		if (!ofrecord) {
-			cerr << "coud NOT save file" << endl;
+		ifstream ifworkload{workload_path};
+		if (!ifworkload) {
+			cerr << "file NOT found" << endl;
 			return -1;
 		}
-		cout << "saving record to file ..." << endl;
-		for (auto const& record : cache_record) {
-			ofrecord << get<0>(record) << ' ' << get<1>(record) << ' ' << get<2>(record)
-					 << ' ' << get<3>(record) << ' ' << get<4>(record) << ' ' << get<5>(record)
-					 << '\n';
-		}
-		cout << "saved" << endl;
+		cout << "file ok" << endl;
+		workload.reserve(3000000);
+		cout << "loading workload from file ..." << endl;
+		get_workload(ifworkload, workload);
+		cout << "loaded" << endl;
+		/*{
+			auto w = workload;
+			sort(w.begin(), w.end());
+			auto unique_last = unique(w.begin(), w.end());
+			cout << "unique elements size in workload: " << distance(w.begin(), unique_last) << endl;
+ 		}*/
+		cout << endl;
 	}
+	/*
+	std::size_t begin_capacity = 600000;
+	std::size_t end_capacity = 600001;
+	std::size_t delta_capacity = 1;
+	*/
+	
+	std::size_t begin_capacity = 1;
+	std::size_t end_capacity = 640000;
+	std::size_t delta_capacity = 20000;
+	
+	
+	{
+		fifo_cache_t<entry_t> cache{};
+		auto cache_record = run_simulation(cache, workload, begin_capacity, end_capacity, delta_capacity);
+		save_record(cache, cache_record);
+		for (int i = 0; i < 25; ++i) cout << "\n";
+	}
+	{
+		lru_cache_t<entry_t> cache{};
+		auto cache_record = run_simulation(cache, workload, begin_capacity, end_capacity, delta_capacity);
+		save_record(cache, cache_record);
+		for (int i = 0; i < 25; ++i) cout << "\n";
+	}
+	
 	char c; cin >> c;
 	return 0;
 }
