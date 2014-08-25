@@ -11,54 +11,45 @@
 
 template<Regular T>
 struct lfu_cache_t {
-	using Pair = std::pair<T, std::size_t>;
-	using Container = std::vector<Pair>;
+	using size_type = std::size_t;
+	using Map = std::unordered_map<T, size_type>;
+	using iterator = typename Map::iterator;
 	
-	using iterator = typename Container::iterator;
-	
-	Container container;
+	Map map;
 	
 	lfu_cache_t()=default;
-	lfu_cache_t(std::size_t capacity) : container(capacity) {;}
+	lfu_cache_t(size_type capacity) : capacity_(capacity) {;}
 	
-	std::size_t capacity() const { return container.capacity(); }
-	std::size_t size() const { return container.size(); }
+	size_type capacity() const { return capacity_; }
+	size_type size() const { return map.size(); }
 	void reserve(std::size_t new_capacity) {
-		container.reserve(new_capacity);
+		map.reserve(new_capacity);
+		capacity_ = new_capacity;
 	}
 	void clear() {
-		container.clear();
+		map.clear();
 	}
 	
 	inline
 	std::tuple<iterator, bool> find(T const& x) {
-		auto first = container.begin();
-		auto last = container.end();
-		auto container_entry_it = last;
-		while(first != last) {
-			if (first->first == x) {
-				container_entry_it = first;
-				break;
-			}
-			++first;
-		}
-		bool cache_miss = container_entry_it == container.end();
+		auto map_entry_it = map.find(x);
+		bool cache_miss = map_entry_it == map.end();
 		if (cache_miss) {
-			bool full = container.size() == capacity();
+			bool full = map.size() == capacity();
 			if (full) {
-				auto replacement_it = min_element(container.begin(), container.end(),
-					[](Pair const& x, Pair const& y){ return x.second < y.second; });
-				*replacement_it = {x, 1};
-				return make_tuple(replacement_it, cache_miss);
-			} else {
-				container.push_back({x, 1});
-				return make_tuple(container.end() - 1, cache_miss);
+				auto replacement_it = min_element(map.begin(), map.end(),
+					[](std::pair<T, size_type> const& x, std::pair<T, size_type> const& y){ return x.second < y.second; });
+				map.erase(replacement_it);
 			}
-		} else {
-			++container_entry_it->second;
+			map.insert({x, 1});
+			return make_tuple(map.find(x), cache_miss);
 		}
-		return make_tuple(container_entry_it, cache_miss);
+		++(map_entry_it->second);
+		return make_tuple(map_entry_it, cache_miss);
 	}
+	
+private:
+	size_type capacity_;
 };
 
 #endif

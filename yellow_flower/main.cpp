@@ -8,6 +8,7 @@
 #include <fifo_cache_t.h>
 #include <lru_cache_t.h>
 #include <lfu_cache_t.h>
+#include <lfu_vector_map_cache_t.h>
 
 const std::string workload_path = "workload.txt";
 //using entry_t = std::string;
@@ -63,6 +64,9 @@ constexpr char* type_name<lru_cache_t<entry_t>>() { return "lru_cache_t"; }
 
 template<>
 constexpr char* type_name<lfu_cache_t<entry_t>>() { return "lfu_cache_t"; }
+
+template<>
+constexpr char* type_name<lfu_vector_map_cache_t<entry_t>>() { return "lfu_vector_map_cache_t"; }
 
 template<typename Cache>
 cache_record_t run_simulation(Cache& cache, workload_t<entry_t> const& workload, std::size_t begin_capacity, std::size_t end_capacity, std::size_t delta_capacity) {
@@ -149,18 +153,31 @@ int main(int argc, char **argv) {
 	std::size_t delta_capacity = 20000;
 	
 	
-	{
+	/*{
 		fifo_cache_t<entry_t> cache{};
 		auto cache_record = run_simulation(cache, workload, begin_capacity, end_capacity, delta_capacity);
-		save_record(cache, cache_record);
+		//save_record(cache, cache_record);
 		for (int i = 0; i < 25; ++i) cout << "\n";
-	}
-	{
+	}*/
+	/*{
 		lru_cache_t<entry_t> cache{};
+		auto cache_record = run_simulation(cache, workload, begin_capacity, end_capacity, delta_capacity);
+		//save_record(cache, cache_record);
+		for (int i = 0; i < 25; ++i) cout << "\n";
+	}*/
+	{
+		lfu_vector_map_cache_t<entry_t> cache{};
 		auto cache_record = run_simulation(cache, workload, begin_capacity, end_capacity, delta_capacity);
 		save_record(cache, cache_record);
 		for (int i = 0; i < 25; ++i) cout << "\n";
 	}
+	{
+		lfu_cache_t<entry_t> cache{};
+		auto cache_record = run_simulation(cache, workload, begin_capacity, end_capacity, delta_capacity);
+		save_record(cache, cache_record);
+		for (int i = 0; i < 25; ++i) cout << "\n";
+	}
+	
 	
 	char c; cin >> c;
 	return 0;

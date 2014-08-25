@@ -50,7 +50,7 @@ struct lru_cache_t {
 			bool full = map.size() == capacity();
 			if (full) {
 				auto replacement_it = std::min_element(map.begin(), map.end(),
-														second_compare<typename Map::key_type, typename Map::mapped_type>{});
+					[](std::pair<T, time_mark_t> const& x, std::pair<T, time_mark_t> const& y){ return x.second < y.second; });
 				map.erase(replacement_it);
 			}
 			map.insert({x, time_mark});

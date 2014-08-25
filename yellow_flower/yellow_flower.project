@@ -28,6 +28,7 @@
     <File Name="lfu_cache_t.h"/>
     <File Name="lru_cache_t.h"/>
     <File Name="workload_t.h"/>
+    <File Name="lfu_vector_map_cache_t.h"/>
   </VirtualDirectory>
   <Settings Type="Executable">
     <GlobalSettings>
