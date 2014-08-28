@@ -52,7 +52,7 @@ LibPath                := $(LibraryPathSwitch). $(LibraryPathSwitch)C:/boost_1_5
 AR       := C:/MinGW-4.8.1/bin/ar.exe rcu
 CXX      := C:/MinGW-4.8.1/bin/g++.exe 
 CC       := C:/MinGW-4.8.1/bin/gcc.exe 
-CXXFLAGS := -std=c++1y -O3 -Wall $(Preprocessors)
+CXXFLAGS := -std=c++1y -Os -Wall $(Preprocessors)
 CFLAGS   :=  -O3 -Wall $(Preprocessors)
 ASFLAGS  := 
 AS       := C:/MinGW-4.8.1/bin/as.exe 
