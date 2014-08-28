@@ -42,7 +42,8 @@ struct lru_cache_t {
 	};
 	
 	inline
-	std::tuple<iterator, bool> find(T const& x) {
+	// return cache_miss
+	bool find(T const& x) {
 		time_mark_t time_mark = time_mark_++;
 		auto map_entry_it = map.find(x);
 		bool cache_miss = map_entry_it == map.end();
@@ -54,10 +55,10 @@ struct lru_cache_t {
 				map.erase(replacement_it);
 			}
 			map.insert({x, time_mark});
-			return make_tuple(map.find(x), cache_miss);
+			return true;
 		}
 		map_entry_it->second = time_mark;
-		return make_tuple(map_entry_it, cache_miss);
+		return false;
 	}
 	
 	size_type capacity_;

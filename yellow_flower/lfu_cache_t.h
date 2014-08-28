@@ -31,7 +31,8 @@ struct lfu_cache_t {
 	}
 	
 	inline
-	std::tuple<iterator, bool> find(T const& x) {
+	// return cache_miss
+	bool find(T const& x) {
 		auto map_entry_it = map.find(x);
 		bool cache_miss = map_entry_it == map.end();
 		if (cache_miss) {
@@ -42,10 +43,10 @@ struct lfu_cache_t {
 				map.erase(replacement_it);
 			}
 			map.insert({x, 1});
-			return make_tuple(map.find(x), cache_miss);
+			return true;
 		}
 		++(map_entry_it->second);
-		return make_tuple(map_entry_it, cache_miss);
+		return false;
 	}
 	
 private:

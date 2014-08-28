@@ -12,7 +12,6 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/lexical_cast.hpp>
-#include <unordered_map>
 
 const std::string workload_default_path = "workload.txt";
 constexpr std::size_t workload_default_size = 3721736;
@@ -25,10 +24,7 @@ std::size_t feed_cache(workload_t<E> const& workload, Cache& cache) {
 	using namespace std;
 	size_t cache_misses = 0;
 	for (auto& entry : workload) {
-		typename Cache::iterator entry_it;
-		bool cache_miss;
-		tie(entry_it, cache_miss) = cache.find(entry);
-		if (cache_miss) ++cache_misses;
+		if (cache.find(entry)) ++cache_misses;
 	}
 	return cache_misses;
 }
@@ -44,10 +40,7 @@ std::tuple<std::size_t, std::size_t> feed_cache(std::istream& in, Cache& cache) 
 	line.reserve(100);
 	while(getline(in, line)) {
 		++workload_size;
-		typename Cache::iterator entry_it;
-		bool cache_miss;
-		tie(entry_it, cache_miss) = cache.find(line);
-		if (cache_miss) ++cache_misses;
+		if (cache.find(line)) ++cache_misses;
 	}
 	return make_tuple(cache_misses, workload_size);
 }

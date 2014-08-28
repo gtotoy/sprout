@@ -37,7 +37,7 @@ struct random_cache_t {
 	}
 	
 	inline
-	std::tuple<iterator, bool> find(T const& x) {
+	bool find(T const& x) {
 		auto map_entry_it = map.find(x);
 		bool cache_miss = map_entry_it == map.end();
 		if (cache_miss) {
@@ -52,9 +52,9 @@ struct random_cache_t {
 				container.push_back(x);
 			}
 			map.insert({x, x});
-			return make_tuple(map.find(x), cache_miss);
+			return true;
 		}
-		return make_tuple(map_entry_it, false);
+		return false;
 	}
 	
 private:
