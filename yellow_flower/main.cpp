@@ -9,8 +9,9 @@
 #include <lru_cache_t.h>
 #include <lfu_cache_t.h>
 #include <random_cache_t.h>
-#include "boost/iostreams/stream.hpp"
-#include "boost/iostreams/device/mapped_file.hpp"
+#include <boost/iostreams/stream.hpp>
+#include <boost/iostreams/device/mapped_file.hpp>
+#include <boost/lexical_cast.hpp>
 #include <unordered_map>
 
 const std::string workload_default_path = "workload.txt";
@@ -207,7 +208,7 @@ int main(int argc, char **argv) {
 		auto workload_path = args[0];
 		auto policy_name = args[1];
 		transform(policy_name.begin(), policy_name.end(), policy_name.begin(), ::tolower);
-		std::size_t cache_capacity = std::stoi(args[2]);
+		std::size_t cache_capacity = lexical_cast<int>(args[2]);
 		if (policy_name == "fifo") {
 			iostreams::stream<iostreams::mapped_file_source> ifworkload(workload_path);
 			if (!ifworkload) {
