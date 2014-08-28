@@ -14,6 +14,7 @@ using workload_t = std::vector<T>;
 std::istream& get_workload(std::istream& in, std::vector<std::string>& x) {
 	using namespace std;
 	string line{};
+	line.reserve(100);
 	while(getline(in, line)) x.push_back(line);
 	return in;
 }

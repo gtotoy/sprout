@@ -13,10 +13,10 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=Gustavo
-Date                   :=08/24/14
+Date                   :=08/27/14
 CodeLitePath           :="C:\Program Files (x86)\CodeLite"
-LinkerName             :=C:\MinGW-4.8.1\bin\g++.exe 
-SharedObjectLinkerName :=C:\MinGW-4.8.1\bin\g++.exe -shared -fPIC
+LinkerName             :=C:/MinGW-4.8.1/bin/g++.exe 
+SharedObjectLinkerName :=C:/MinGW-4.8.1/bin/g++.exe -shared -fPIC
 ObjectSuffix           :=.o
 DependSuffix           :=.o.d
 PreprocessSuffix       :=.i
@@ -36,26 +36,26 @@ ObjectsFileList        :="yellow_flower.txt"
 PCHCompileFlags        :=
 MakeDirCommand         :=makedir
 RcCmpOptions           := 
-RcCompilerName         :=C:\MinGW-4.8.1\bin\windres.exe 
+RcCompilerName         :=C:/MinGW-4.8.1/bin/windres.exe 
 LinkOptions            :=  
-IncludePath            :=  $(IncludeSwitch). $(IncludeSwitch). 
+IncludePath            :=  $(IncludeSwitch). $(IncludeSwitch)C:/boost_1_56_0/ $(IncludeSwitch). 
 IncludePCH             := 
 RcIncludePath          := 
-Libs                   := 
-ArLibs                 :=  
-LibPath                := $(LibraryPathSwitch). 
+Libs                   := $(LibrarySwitch)boost_iostreams-mgw48-mt-1_56 
+ArLibs                 :=  "boost_iostreams-mgw48-mt-1_56" 
+LibPath                := $(LibraryPathSwitch). $(LibraryPathSwitch)C:/boost_1_56_0/stage/lib/ 
 
 ##
 ## Common variables
 ## AR, CXX, CC, AS, CXXFLAGS and CFLAGS can be overriden using an environment variables
 ##
-AR       := C:\MinGW-4.8.1\bin\ar.exe rcu
-CXX      := C:\MinGW-4.8.1\bin\g++.exe 
-CC       := C:\MinGW-4.8.1\bin\gcc.exe 
+AR       := C:/MinGW-4.8.1/bin/ar.exe rcu
+CXX      := C:/MinGW-4.8.1/bin/g++.exe 
+CC       := C:/MinGW-4.8.1/bin/gcc.exe 
 CXXFLAGS := -std=c++1y -O3 -Wall $(Preprocessors)
 CFLAGS   :=  -O3 -Wall $(Preprocessors)
 ASFLAGS  := 
-AS       := C:\MinGW-4.8.1\bin\as.exe 
+AS       := C:/MinGW-4.8.1/bin/as.exe 
 
 
 ##
@@ -104,9 +104,8 @@ $(IntermediateDirectory)/main.cpp$(PreprocessSuffix): main.cpp
 ## Clean
 ##
 clean:
-	$(RM) $(IntermediateDirectory)/main.cpp$(ObjectSuffix)
-	$(RM) $(IntermediateDirectory)/main.cpp$(DependSuffix)
-	$(RM) $(IntermediateDirectory)/main.cpp$(PreprocessSuffix)
+	$(RM) ./Release/*$(ObjectSuffix)
+	$(RM) ./Release/*$(DependSuffix)
 	$(RM) $(OutputFile)
 	$(RM) $(OutputFile).exe
 	$(RM) "../.build-release/yellow_flower"

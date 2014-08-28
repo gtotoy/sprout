@@ -43,11 +43,6 @@ struct fifo_cache_t {
 		if (cache_miss) {
 			bool full = container.size() == capacity();
 			if (full) {
-				/*replacement_it_ = container.begin();
-				map.erase(*replacement_it_);
-				*replacement_it_ = x;
-				rotate(container.begin(), container.begin() + 1, container.end());*/
-				
 				map.erase(*replacement_it_);
 				*replacement_it_ = x;
 				{
@@ -60,7 +55,7 @@ struct fifo_cache_t {
 			map.insert({x, x});
 			return make_tuple(map.find(x), cache_miss);
 		}
-		return make_tuple(map_entry_it, cache_miss);
+		return make_tuple(map_entry_it, false);
 	}
 	
 	private:

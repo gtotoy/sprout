@@ -1,8 +1,8 @@
 require "csv"
 require "gnuplot"
 
-filenames = ["fifo_cache_t", "lru_cache_t", "lfu_cache_t"]
-ext = "pdf"
+filenames = ["fifo_cache_t", "lru_cache_t", "lfu_cache_t", "random_cache_t"]
+ext = "eps"
 workload_size = 3721736
 tuple_descriptor = ["Cache capacity", "Cache misses", "Normalized cache misses", "Warm cache misses", "Normalized warm cache misses", "Time (in seconds)"]
 
