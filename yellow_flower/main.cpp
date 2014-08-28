@@ -11,15 +11,16 @@
 #include <random_cache_t.h>
 #include "boost/iostreams/stream.hpp"
 #include "boost/iostreams/device/mapped_file.hpp"
+#include <unordered_map>
 
-const std::string workload_path = "workload.txt";
+const std::string workload_default_path = "workload.txt";
+constexpr std::size_t workload_default_size = 3721736;
 //using entry_t = std::string;
 using entry_t = int;
 
-
-template<class C, class Cache>
+template<class E, class Cache>
 inline
-std::size_t feed_cache(C const& workload, Cache& cache) {
+std::size_t feed_cache(workload_t<E> const& workload, Cache& cache) {
 	using namespace std;
 	size_t cache_misses = 0;
 	for (auto& entry : workload) {
@@ -33,24 +34,26 @@ std::size_t feed_cache(C const& workload, Cache& cache) {
 
 template<class Cache>
 inline
-std::size_t feed_cache(std::istream& in, Cache& cache) {
+// return {cache_misses, workload_size}
+std::tuple<std::size_t, std::size_t> feed_cache(std::istream& in, Cache& cache) {
 	using namespace std;
-	cout << "using istream workload" << endl;
 	size_t cache_misses = 0;
+	size_t workload_size = 0;
 	string line{};
 	line.reserve(100);
 	while(getline(in, line)) {
+		++workload_size;
 		typename Cache::iterator entry_it;
 		bool cache_miss;
 		tie(entry_it, cache_miss) = cache.find(line);
 		if (cache_miss) ++cache_misses;
 	}
-	return cache_misses;
+	return make_tuple(cache_misses, workload_size);
 }
 
 template<class C, class Cache>
 inline
-void print_workload_cache (C const& workload, Cache& cache) {
+void print_workload_cache(C const& workload, Cache& cache) {
 	std::cout << "cache capacity: " << cache.capacity() << std::endl
 		 << "cache size: " << cache.size() << std::endl
 		 << "workload size: " << workload.size() << std::endl
@@ -59,14 +62,14 @@ void print_workload_cache (C const& workload, Cache& cache) {
 
 template<class Cache>
 inline
-void print_workload_cache (std::istream& workload, std::size_t workload_size, Cache& cache) {
+void print_workload_cache(std::istream& workload, std::size_t workload_size, Cache& cache) {
 	std::cout << "cache capacity: " << cache.capacity() << std::endl
 		 << "cache size: " << cache.size() << std::endl
 		 << "workload size: " << workload_size << std::endl
 		 << std::endl;
 }
 
-void print_elapsed_time (std::chrono::time_point<std::chrono::system_clock> const& begin,
+void print_elapsed_time(std::chrono::time_point<std::chrono::system_clock> const& begin,
 							std::chrono::time_point<std::chrono::system_clock> const& end) {
 	std::chrono::duration<double> elapsed_seconds = end-begin;
 	std::time_t end_time = std::chrono::system_clock::to_time_t(end);
@@ -178,79 +181,145 @@ void save_record(Cache const& cache, cache_record_t const& cache_record) {
 	cout << "saved" << endl;
 }
 
-
+template<typename Cache>
+inline
+void print_miss_rate(std::size_t cache_misses, Cache cache, std::size_t workload_size) {
+	using namespace std;
+	size_t warm_cache_misses = (cache_misses > cache.size()) ? cache_misses - cache.size() : 0;
+	double miss_rate = cache_misses * 100.0/workload_size;
+	double warm_miss_rate = warm_cache_misses * 100.0/workload_size;
+	cout << "miss rate: " << miss_rate << "% (" 
+		 << cache_misses << " misses out of " << workload_size << " entries)" << endl
+		 << "miss rate (warm cache): " << warm_miss_rate << "% ("
+		 << warm_cache_misses << " misses out of " << workload_size << " entries)" << endl;
+}
 
 int main(int argc, char **argv) {
 	using namespace std;
-	workload_t<entry_t> workload{};
-	std::chrono::time_point<std::chrono::system_clock> begin_time, end_time;
-	begin_time = std::chrono::system_clock::now();
-	{
-		//ifstream ifworkload{workload_path};
-		boost::iostreams::stream<boost::iostreams::mapped_file_source> ifworkload(workload_path);
-		if (!ifworkload) {
-			cerr << "file NOT found" << endl;
+	using namespace boost;
+	if (argc == 1) {
+		cerr << "invalid arguments" << endl;
+		return -1;
+	}
+	
+	vector<string> args(argv+1, argv+argc);
+	if (args.size() == 3) { // assume <workload_path> <policy> <cache_capacity>
+		auto workload_path = args[0];
+		auto policy_name = args[1];
+		transform(policy_name.begin(), policy_name.end(), policy_name.begin(), ::tolower);
+		std::size_t cache_capacity = std::stoi(args[2]);
+		if (policy_name == "fifo") {
+			iostreams::stream<iostreams::mapped_file_source> ifworkload(workload_path);
+			if (!ifworkload) {
+				cerr << "file NOT found" << endl;
+				return -1;
+			}
+			using fifo_entry_t = std::string;
+			fifo_cache_t<fifo_entry_t> cache{cache_capacity};
+			size_t cache_misses{};
+			size_t workload_size{};
+			tie(cache_misses, workload_size) = feed_cache(ifworkload, cache);
+			print_miss_rate(cache_misses, cache, workload_size);
+			return 0;
+		}
+		if (policy_name == "lru") {
+			iostreams::stream<iostreams::mapped_file_source> ifworkload(workload_path);
+			if (!ifworkload) {
+				cerr << "file NOT found" << endl;
+				return -1;
+			}
+			using lru_entry_t = int;
+			workload_t<lru_entry_t> workload{};
+			workload.reserve(workload_default_size);
+			get_workload(ifworkload, workload);
+			lru_cache_t<lru_entry_t> cache{cache_capacity};
+			size_t cache_misses{};
+			cache_misses = feed_cache(workload, cache);
+			print_miss_rate(cache_misses, cache, workload.size());
+			return 0;
+		}
+		if (policy_name == "lfu") {
+			iostreams::stream<iostreams::mapped_file_source> ifworkload(workload_path);
+			if (!ifworkload) {
+				cerr << "file NOT found" << endl;
+				return -1;
+			}
+			using lfu_entry_t = int;
+			workload_t<lfu_entry_t> workload{};
+			workload.reserve(workload_default_size);
+			get_workload(ifworkload, workload);
+			lfu_cache_t<lfu_entry_t> cache{cache_capacity};
+			size_t cache_misses{};
+			cache_misses = feed_cache(workload, cache);
+			print_miss_rate(cache_misses, cache, workload.size());
+			return 0;
+		}
+	}
+
+	
+	
+	
+	
+	if (args.size() == 1) { // assume <--rs>
+		string rs = args[0];
+		transform(rs.begin(), rs.end(), rs.begin(), ::tolower);
+		if (rs != "--rs") {
+			cerr << "invalid argument" << endl;
 			return -1;
 		}
-		cout << "file ok" << endl;
-		workload.reserve(3000000);
-		cout << "loading workload from file ..." << endl;
-		get_workload(ifworkload, workload);
-		cout << "loaded" << endl;
-		/*{
-			auto w = workload;
-			sort(w.begin(), w.end());
-			auto unique_last = unique(w.begin(), w.end());
-			cout << "unique elements size in workload: " << distance(w.begin(), unique_last) << endl;
- 		}*/
-		cout << endl;
-	}
-	end_time = std::chrono::system_clock::now();
-	print_elapsed_time(begin_time, end_time);
-	/*
-	std::size_t begin_capacity = 600000;
-	std::size_t end_capacity = 600001;
-	std::size_t delta_capacity = 1;
-	*/
-	
-	std::size_t begin_capacity = 1;
-	std::size_t end_capacity = 640000;
-	std::size_t delta_capacity = 20000;
-	
-	boost::iostreams::stream<boost::iostreams::mapped_file_source> ifworkload(workload_path);
-	{
-		fifo_cache_t<entry_t> cache{};
-		//auto cache_record = run_simulation(cache, ifworkload, 3721736, begin_capacity, end_capacity, delta_capacity);
-		auto cache_record = run_simulation(cache, workload, begin_capacity, end_capacity, delta_capacity);
+		workload_t<entry_t> workload{};
+		std::chrono::time_point<std::chrono::system_clock> begin_time, end_time;
+		begin_time = std::chrono::system_clock::now();
+		{
+			iostreams::stream<iostreams::mapped_file_source> ifworkload(workload_default_path);
+			if (!ifworkload) {
+				cerr << "file NOT found" << endl;
+				return -1;
+			}
+			cout << "file ok" << endl;
+			workload.reserve(workload_default_size);
+			cout << "loading workload from file ..." << endl;
+			get_workload(ifworkload, workload);
+			cout << "loaded" << endl;
+			/*{
+				auto w = workload;
+				sort(w.begin(), w.end());
+				auto unique_last = unique(w.begin(), w.end());
+				cout << "unique elements size in workload: " << distance(w.begin(), unique_last) << endl;
+			}*/
+			cout << endl;
+		}
+		end_time = std::chrono::system_clock::now();
+		print_elapsed_time(begin_time, end_time);
 		
-		//save_record(cache, cache_record);
-		for (int i = 0; i < 25; ++i) cout << "\n";
+		std::size_t begin_capacity = 1;
+		std::size_t end_capacity = 640000;
+		std::size_t delta_capacity = 20000;
+		
+		{
+			fifo_cache_t<entry_t> cache{};
+			auto cache_record = run_simulation(cache, workload, begin_capacity, end_capacity, delta_capacity);
+			save_record(cache, cache_record);
+			for (int i = 0; i < 25; ++i) cout << "\n";
+		}
+		{
+			random_cache_t<entry_t> cache{};
+			auto cache_record = run_simulation(cache, workload, begin_capacity, end_capacity, delta_capacity);
+			save_record(cache, cache_record);
+			for (int i = 0; i < 25; ++i) cout << "\n";
+		}
+		{
+			lfu_cache_t<entry_t> cache{};
+			auto cache_record = run_simulation(cache, workload, begin_capacity, end_capacity, delta_capacity);
+			save_record(cache, cache_record);
+			for (int i = 0; i < 25; ++i) cout << "\n";
+		}
+		{
+			lru_cache_t<entry_t> cache{};
+			auto cache_record = run_simulation(cache, workload, begin_capacity, end_capacity, delta_capacity);
+			save_record(cache, cache_record);
+			for (int i = 0; i < 25; ++i) cout << "\n";
+		}
 	}
-	/*{
-		lru_cache_t<entry_t> cache{};
-		auto cache_record = run_simulation(cache, workload, begin_capacity, end_capacity, delta_capacity);
-		//save_record(cache, cache_record);
-		for (int i = 0; i < 25; ++i) cout << "\n";
-	}*/
-	/*{
-		lfu_vector_map_cache_t<entry_t> cache{};
-		auto cache_record = run_simulation(cache, workload, begin_capacity, end_capacity, delta_capacity);
-		save_record(cache, cache_record);
-		for (int i = 0; i < 25; ++i) cout << "\n";
-	}*/
-	/*{
-		lfu_cache_t<entry_t> cache{};
-		auto cache_record = run_simulation(cache, workload, begin_capacity, end_capacity, delta_capacity);
-		save_record(cache, cache_record);
-		for (int i = 0; i < 25; ++i) cout << "\n";
-	}*/
-	{
-		random_cache_t<entry_t> cache{};
-		auto cache_record = run_simulation(cache, workload, begin_capacity, end_capacity, delta_capacity);
-		save_record(cache, cache_record);
-		for (int i = 0; i < 25; ++i) cout << "\n";
-	}
-	
-	char c; cin >> c;
 	return 0;
 }

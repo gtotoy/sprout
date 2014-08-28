@@ -5,18 +5,18 @@
 ## Release
 ProjectName            :=yellow_flower
 ConfigurationName      :=Release
-WorkspacePath          := "C:\Users\Gustavo\Desktop\sprout"
-ProjectPath            := "C:\Users\Gustavo\Desktop\sprout\yellow_flower"
+WorkspacePath          := "/home/gus/Documents/sprout"
+ProjectPath            := "/home/gus/Documents/sprout/yellow_flower"
 IntermediateDirectory  :=./Release
 OutDir                 := $(IntermediateDirectory)
 CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
-User                   :=Gustavo
-Date                   :=08/27/14
-CodeLitePath           :="C:\Program Files (x86)\CodeLite"
-LinkerName             :=C:/MinGW-4.8.1/bin/g++.exe 
-SharedObjectLinkerName :=C:/MinGW-4.8.1/bin/g++.exe -shared -fPIC
+User                   :=Gustavo Totoy
+Date                   :=08/28/14
+CodeLitePath           :="/home/gus/.codelite"
+LinkerName             :=/usr/bin/g++ 
+SharedObjectLinkerName :=/usr/bin/g++ -shared -fPIC
 ObjectSuffix           :=.o
 DependSuffix           :=.o.d
 PreprocessSuffix       :=.i
@@ -34,35 +34,32 @@ ArchiveOutputSwitch    :=
 PreprocessOnlySwitch   :=-E
 ObjectsFileList        :="yellow_flower.txt"
 PCHCompileFlags        :=
-MakeDirCommand         :=makedir
-RcCmpOptions           := 
-RcCompilerName         :=C:/MinGW-4.8.1/bin/windres.exe 
+MakeDirCommand         :=mkdir -p
 LinkOptions            :=  
 IncludePath            :=  $(IncludeSwitch). $(IncludeSwitch)C:/boost_1_56_0/ $(IncludeSwitch). 
 IncludePCH             := 
 RcIncludePath          := 
-Libs                   := $(LibrarySwitch)boost_iostreams-mgw48-mt-1_56 
-ArLibs                 :=  "boost_iostreams-mgw48-mt-1_56" 
+Libs                   := $(LibrarySwitch)boost_iostreams 
+ArLibs                 :=  "boost_iostreams" 
 LibPath                := $(LibraryPathSwitch). $(LibraryPathSwitch)C:/boost_1_56_0/stage/lib/ 
 
 ##
 ## Common variables
 ## AR, CXX, CC, AS, CXXFLAGS and CFLAGS can be overriden using an environment variables
 ##
-AR       := C:/MinGW-4.8.1/bin/ar.exe rcu
-CXX      := C:/MinGW-4.8.1/bin/g++.exe 
-CC       := C:/MinGW-4.8.1/bin/gcc.exe 
+AR       := /usr/bin/ar rcu
+CXX      := /usr/bin/g++ 
+CC       := /usr/bin/gcc 
 CXXFLAGS := -std=c++1y -O3 -Wall $(Preprocessors)
 CFLAGS   :=  -O3 -Wall $(Preprocessors)
 ASFLAGS  := 
-AS       := C:/MinGW-4.8.1/bin/as.exe 
+AS       := /usr/bin/as 
 
 
 ##
 ## User defined environment variables
 ##
-CodeLiteDir:=C:\Program Files (x86)\CodeLite
-UNIT_TEST_PP_SRC_DIR:=C:\UnitTest++-1.3
+CodeLiteDir:=/usr/share/codelite
 Objects0=$(IntermediateDirectory)/main.cpp$(ObjectSuffix) 
 
 
@@ -82,7 +79,7 @@ $(OutputFile): $(IntermediateDirectory)/.d $(Objects)
 	$(LinkerName) $(OutputSwitch)$(OutputFile) @$(ObjectsFileList) $(LibPath) $(Libs) $(LinkOptions)
 
 $(IntermediateDirectory)/.d:
-	@$(MakeDirCommand) "./Release"
+	@test -d ./Release || $(MakeDirCommand) ./Release
 
 PreBuild:
 
@@ -91,7 +88,7 @@ PreBuild:
 ## Objects
 ##
 $(IntermediateDirectory)/main.cpp$(ObjectSuffix): main.cpp $(IntermediateDirectory)/main.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "C:/Users/Gustavo/Desktop/sprout/yellow_flower/main.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/main.cpp$(ObjectSuffix) $(IncludePath)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/gus/Documents/sprout/yellow_flower/main.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/main.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/main.cpp$(DependSuffix): main.cpp
 	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/main.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/main.cpp$(DependSuffix) -MM "main.cpp"
 
@@ -107,7 +104,6 @@ clean:
 	$(RM) ./Release/*$(ObjectSuffix)
 	$(RM) ./Release/*$(DependSuffix)
 	$(RM) $(OutputFile)
-	$(RM) $(OutputFile).exe
 	$(RM) "../.build-release/yellow_flower"
 
 
