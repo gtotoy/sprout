@@ -12,14 +12,15 @@
 template<Regular T>
 struct lru_cache_t {
 	using size_type = std::size_t;
-	using time_mark_t = std::size_t;
-	using Map = std::unordered_map<T, time_mark_t>;
-	using iterator = typename Map::iterator;
+	using Container = std::list<T>;
+	using iterator = typename Container::iterator;
+	using Map = std::unordered_map<T, iterator>;
 	
 	Map map;
+	Container container;
 	
 	lru_cache_t()=default;
-	lru_cache_t(size_type capacity) : map(), time_mark_() {
+	lru_cache_t(size_type capacity) : map(), container() {
 		map.reserve(capacity);
 		capacity_ = capacity;
 	}
@@ -30,8 +31,7 @@ struct lru_cache_t {
 		map.reserve(new_capacity);
 		capacity_ = new_capacity;
 	}
-	void clear() { map.clear(); reset_time_mark(); }
-	void reset_time_mark() { time_mark_ = time_mark_t(); }
+	void clear() { map.clear(); container.clear(); }
 	
 	
 	template <typename F, typename S>
@@ -44,25 +44,26 @@ struct lru_cache_t {
 	inline
 	// return cache_miss
 	bool find(T const& x) {
-		time_mark_t time_mark = time_mark_++;
 		auto map_entry_it = map.find(x);
 		bool cache_miss = map_entry_it == map.end();
 		if (cache_miss) {
 			bool full = map.size() == capacity();
 			if (full) {
-				auto replacement_it = std::min_element(map.begin(), map.end(),
-					[](std::pair<T, time_mark_t> const& x, std::pair<T, time_mark_t> const& y){ return x.second < y.second; });
-				map.erase(replacement_it);
+				auto replacement_it = --container.end();
+				map.erase(*replacement_it);
+				*replacement_it = x;
+				container.splice(container.begin(), container, replacement_it); // replacement_it is not invalidated
+			} else {
+				container.push_front(x);
 			}
-			map.insert({x, time_mark});
+			map.insert({x, container.begin()});
 			return true;
 		}
-		map_entry_it->second = time_mark;
+		container.splice(container.begin(), container, map_entry_it->second); // map_entry_it->second is not invalidated
 		return false;
 	}
 	
 	size_type capacity_;
-	time_mark_t time_mark_;
 };
 
 
