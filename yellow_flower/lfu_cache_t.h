@@ -38,12 +38,16 @@ struct lfu_cache_t {
 		if (cache_miss) {
 			bool full = map.size() == capacity();
 			if (full) {
-				auto replacement_it = min_element(map.begin(), map.end(),
-					[](std::pair<T, size_type> const& x, std::pair<T, size_type> const& y){ return x.second < y.second; });
+				auto replacement_it = min_;
 				map.erase(replacement_it);
 			}
 			map.insert({x, 1});
+			min_ = map.find(x);
 			return true;
+		}
+		if (min_->first == map_entry_it->first) {
+			min_ = min_element(map.begin(), map.end(),
+					[](std::pair<T, size_type> const& x, std::pair<T, size_type> const& y){ return x.second < y.second; });
 		}
 		++(map_entry_it->second);
 		return false;
@@ -51,6 +55,7 @@ struct lfu_cache_t {
 	
 private:
 	size_type capacity_;
+	iterator min_;
 };
 
 #endif

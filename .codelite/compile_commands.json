@@ -1,9 +1,9 @@
 [{
   "directory": "C:\\Users\\Gustavo\\Desktop\\sprout\\yellow_flower",
-  "command": "C:/MinGW-4.8.1/bin/g++.exe -std=c++1y -O3 -Wall -DNDEBUG -I. -IC:/boost_1_56_0/ -I. -MG -MP -MT./Release/main.cpp.o -MF./Release/main.cpp.o.d -MM main.cpp",
+  "command": "C:/MinGW-4.8.1/bin/g++.exe -std=c++1y -Os -Wall -DNDEBUG -I. -IC:/boost_1_56_0/ -I. -MG -MP -MT./Release/main.cpp.o -MF./Release/main.cpp.o.d -MM main.cpp",
   "file": "C:\\Users\\Gustavo\\Desktop\\sprout\\yellow_flower\\main.cpp"
  }, {
   "directory": "C:\\Users\\Gustavo\\Desktop\\sprout\\yellow_flower",
-  "command": "C:/MinGW-4.8.1/bin/g++.exe -c C:/Users/Gustavo/Desktop/sprout/yellow_flower/main.cpp -std=c++1y -O3 -Wall -DNDEBUG -o ./Release/main.cpp.o -I. -IC:/boost_1_56_0/ -I.",
+  "command": "C:/MinGW-4.8.1/bin/g++.exe -c C:/Users/Gustavo/Desktop/sprout/yellow_flower/main.cpp -std=c++1y -Os -Wall -DNDEBUG -o ./Release/main.cpp.o -I. -IC:/boost_1_56_0/ -I.",
   "file": "C:\\Users\\Gustavo\\Desktop\\sprout\\yellow_flower\\main.cpp"
  }]
